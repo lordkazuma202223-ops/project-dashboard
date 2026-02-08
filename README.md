@@ -32,16 +32,52 @@ Open [http://localhost:3000](http://localhost:3000) to view.
 
 ## Data Sources
 
-Currently uses mock data. Production integration points:
+### API Endpoints
 
-- Cron jobs: OpenClaw gateway API
-- Projects: website-manager registry
-- System: Session status API
+The dashboard now fetches real data from internal APIs:
+
+**Cron Jobs:** `/api/cron-jobs`
+- Returns list of scheduled jobs with status
+- Auto-refreshes every 60 seconds
+- Shows next run time and status
+
+**Projects:** `/api/projects`
+- Returns all registered projects with deployment status
+- Tracks last updated timestamp
+- Shows active/error/deploying status
+
+**System Status:** `/api/system-status`
+- Monitors disk usage (%)
+- Monitors memory usage (%)
+- Tracks system uptime (hours)
+- Health status indicator
+
+### Current Implementation
+
+**Development:**
+- Mock data in API routes (for testing)
+- Polls every 60 seconds for updates
+- Real-time status updates
+
+**Production Integration:**
+- Replace mock data with OpenClaw API calls
+- Cron jobs: OpenClaw `cron list` endpoint
+- Projects: Deployed projects registry
+- System: OpenClaw session status API
+
+### Real-Time Features
+
+✅ Auto-refresh every 60 seconds
+✅ Instant status updates
+✅ Loading states during refresh
+✅ Error handling with logger utility
+✅ Production-ready API structure
 
 ## Future Enhancements
 
-- [ ] Real API integration
-- [ ] Alert notifications (Telegram)
+- [ ] WebSocket for instant updates
+- [ ] Alert notifications (Telegram/Email)
 - [ ] Historical data charts
-- [ ] Add/edit cron jobs
-- [ ] Project deployment triggers
+- [ ] Add/edit cron jobs (API integration)
+- [ ] Project deployment triggers (API integration)
+- [ ] Error rate limiting and caching

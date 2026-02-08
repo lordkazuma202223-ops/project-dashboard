@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Activity, Clock, Server, AlertTriangle, CheckCircle, XCircle, Globe, HardDrive, Cpu, Calendar } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface CronJob {
   name: string;
@@ -23,54 +24,83 @@ interface Project {
 export default function Dashboard() {
   const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [system, setSystem] = useState({ diskUsage: 64.2, memoryUsage: 23 });
+  const [system, setSystem] = useState({ 
+    diskUsage: 64.2, 
+    memoryUsage: 23, 
+    uptime: 118.1, 
+    healthStatus: 'ok' as 'ok' | 'error' | 'warning' 
+  });
   const [refreshing, setRefreshing] = useState(false);
 
+  // Fetch data from API on mount and set up polling
   useEffect(() => {
-    // Mock data - in production, fetch from API
-    setCronJobs([
-      {
-        name: 'heartbeat-hourly',
-        schedule: '0 * * * *',
-        timezone: 'Asia/Singapore',
-        nextRun: new Date(Date.now() + 8 * 60 * 1000).toISOString(),
-        status: 'ok',
-        enabled: true,
-      },
-      {
-        name: 'capability-evolver-daily',
-        schedule: '0 2 * * *',
-        timezone: 'Asia/Singapore',
-        nextRun: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-        status: 'ok',
-        enabled: true,
-      },
-      {
-        name: 'Daily Motivation (Burmese)',
-        schedule: '0 8 * * 1-5',
-        timezone: 'Asia/Singapore',
-        nextRun: new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString(),
-        lastRun: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-        status: 'ok',
-        enabled: true,
-      },
-    ]);
+    let mounted = true;
 
-    setProjects([
-      {
-        name: 'mingalbar-sg',
-        url: 'https://mingalbar-sg.vercel.app',
-        status: 'active',
-        lastUpdated: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      },
-    ]);
+    const fetchData = async () => {
+      if (!mounted) return;
+
+      try {
+        // Fetch cron jobs
+        const cronRes = await fetch('/api/cron-jobs');
+        if (cronRes.ok) {
+          const cronData = await cronRes.json();
+          setCronJobs(cronData);
+        }
+
+        // Fetch projects
+        const projectsRes = await fetch('/api/projects');
+        if (projectsRes.ok) {
+          const projectsData = await projectsRes.json();
+          setProjects(projectsData);
+        }
+
+        // Fetch system status
+        const systemRes = await fetch('/api/system-status');
+        if (systemRes.ok) {
+          const systemData = await systemRes.json();
+          setSystem(systemData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      }
+    };
+
+    // Initial fetch
+    fetchData();
+
+    // Poll every 60 seconds for real-time updates
+    const interval = setInterval(fetchData, 60000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const refreshData = async () => {
     setRefreshing(true);
-    // Simulate refresh
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setRefreshing(false);
+    try {
+      // Fetch all data from APIs
+      const [cronRes, projectsRes, systemRes] = await Promise.all([
+        fetch('/api/cron-jobs'),
+        fetch('/api/projects'),
+        fetch('/api/system-status'),
+      ]);
+
+      if (cronRes.ok) {
+        setCronJobs(await cronRes.json());
+      }
+      if (projectsRes.ok) {
+        setProjects(await projectsRes.json());
+      }
+      if (systemRes.ok) {
+        setSystem(await systemRes.json());
+      }
+    } catch (error) {
+      logger.error('Failed to refresh data', error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const formatTime = (date: string) => {
@@ -83,6 +113,13 @@ export default function Dashboard() {
     const diff = next - now;
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      return `${days}d ${remainingHours}h ${minutes}m`;
+    }
+    
     return `${hours}h ${minutes}m`;
   };
 
@@ -150,14 +187,30 @@ export default function Dashboard() {
           <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-slate-400 text-sm font-medium">System Health</span>
-              <CheckCircle className="w-5 h-5 text-green-400" />
+              {system.healthStatus === 'ok' && <CheckCircle className="w-5 h-5 text-green-400" />}
+              {system.healthStatus === 'error' && <XCircle className="w-5 h-5 text-red-400" />}
+              {system.healthStatus === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-400" />}
             </div>
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full" />
-                <span className="text-lg font-semibold">All systems operational</span>
-              </div>
-              <p className="text-slate-400 text-sm">Uptime: 118.1 hours</p>
+              {system.healthStatus === 'ok' && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full" />
+                  <span className="text-lg font-semibold">All systems operational</span>
+                </div>
+              )}
+              {system.healthStatus === 'warning' && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-amber-400 rounded-full" />
+                  <span className="text-lg font-semibold">Performance warning</span>
+                </div>
+              )}
+              {system.healthStatus === 'error' && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-400 rounded-full" />
+                  <span className="text-lg font-semibold">System error detected</span>
+                </div>
+              )}
+              <p className="text-slate-400 text-sm">Uptime: {system.uptime.toFixed(1)} hours</p>
             </div>
           </div>
         </section>
