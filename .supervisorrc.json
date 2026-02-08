@@ -1,0 +1,16 @@
+{
+  "framework": "nextjs",
+  "strictness": "relaxed",
+  "checks": {
+    "testCoverage": 60,
+    "strictTypes": false,
+    "tagClosure": true,
+    "securityAudit": true
+  },
+  "skip": [],
+  "thresholds": {
+    "coverage": 60
+  },
+  "phase1": true,
+  "phase2": false
+}
