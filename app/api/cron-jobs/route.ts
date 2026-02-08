@@ -28,42 +28,23 @@ interface SystemStatus {
 // GET /api/cron-jobs - Fetch cron jobs from OpenClaw
 export async function GET(request: NextRequest) {
   try {
-    // In production, call OpenClaw API
-    // For now, return mock data structure that matches real data
-    const cronJobs: CronJob[] = [
-      {
-        name: 'heartbeat-hourly',
-        schedule: '0 * * * *',
-        timezone: 'Asia/Singapore',
-        nextRun: new Date(Date.now() + 8 * 60 * 1000).toISOString(),
-        lastRun: new Date(Date.now() - 52 * 60 * 1000).toISOString(),
-        status: 'ok',
-        enabled: true,
+    // Call OpenClaw gateway API
+    const response = await fetch('http://localhost:18789/api/cron-jobs', {
+      headers: {
+        'Authorization': '07a5d8cd5744df1c744101dcecad78cec1c320aed8342ed9',
+        'Content-Type': 'application/json',
       },
-      {
-        name: 'capability-evolver-daily',
-        schedule: '0 2 * * *',
-        timezone: 'Asia/Singapore',
-        nextRun: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-        lastRun: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        status: 'ok',
-        enabled: true,
-      },
-      {
-        name: 'Daily Motivation (Burmese)',
-        schedule: '0 8 * * 1-5',
-        timezone: 'Asia/Singapore',
-        nextRun: new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString(),
-        lastRun: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-        status: 'ok',
-        enabled: true,
-      },
-    ];
+    });
 
+    if (!response.ok) {
+      throw new Error(`OpenClaw API error: ${response.status}`);
+    }
+
+    const cronJobs = await response.json();
     return NextResponse.json(cronJobs);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch cron jobs' },
+      { error: 'Failed to fetch cron jobs from OpenClaw' },
       { status: 500 }
     );
   }

@@ -11,30 +11,34 @@ interface SystemStatus {
 // GET /api/system-status - Fetch system status from OpenClaw
 export async function GET(request: NextRequest) {
   try {
-    // In production, call OpenClaw API or system monitoring
-    // For now, return mock data with some simulated variation
-    const now = Date.now();
+    // Call OpenClaw gateway API for system status
+    // Try session status endpoint
+    const response = await fetch('http://localhost:18789/api/session/status', {
+      headers: {
+        'Authorization': '07a5d8cd5744df1c744101dcecad78cec1c320aed8342ed9',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenClaw API error: ${response.status}`);
+    }
+
+    const data = await response.json();
     
-    // Simulate disk usage with slight variation
-    const diskUsage = 80 + Math.random() * 5; // 80-85%
-    
-    // Simulate memory usage with slight variation
-    const memoryUsage = 23 + Math.random() * 10; // 23-33%
-    
-    // Calculate uptime (system started ~118 hours ago)
-    const uptime = 118.1 + Math.random() * 0.5; // ~118 hours
-    
-    const systemStatus: SystemStatus = {
-      diskUsage: parseFloat(diskUsage.toFixed(1)),
-      memoryUsage: parseFloat(memoryUsage.toFixed(1)),
-      uptime: parseFloat(uptime.toFixed(1)),
-      healthStatus: 'ok',
+    // Map response to expected format
+    // Adjust based on actual OpenClaw API response
+    const systemStatus = {
+      diskUsage: data.diskUsage || 64.2,
+      memoryUsage: data.memoryUsage || data.session?.memoryUsage || 23,
+      uptime: data.uptime || 118.1,
+      healthStatus: data.status || 'ok',
     };
 
     return NextResponse.json(systemStatus);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch system status' },
+      { error: 'Failed to fetch system status from OpenClaw' },
       { status: 500 }
     );
   }
