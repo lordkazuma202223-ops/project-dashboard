@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { Activity, Clock, Server, AlertTriangle, CheckCircle, XCircle, Globe, HardDrive, Cpu, Calendar } from 'lucide-react';
 import { logger } from '@/lib/logger';
 
+// Gateway URL - use environment variable or localhost fallback
+const GATEWAY_URL = process.env.NEXT_PUBLIC_OPENCLAW_GATEWAY_URL || 'http://localhost:18789';
+
 interface CronJob {
   name: string;
   schedule: string;
@@ -41,7 +44,7 @@ export default function Dashboard() {
 
       try {
         // Fetch cron jobs
-        const cronRes = await fetch('/api/cron-jobs');
+        const cronRes = await fetch(`${GATEWAY_URL}/api/cron-jobs`);
         if (cronRes.ok) {
           const cronData = await cronRes.json();
           setCronJobs(cronData);
@@ -82,9 +85,9 @@ export default function Dashboard() {
     try {
       // Fetch all data from APIs
       const [cronRes, projectsRes, systemRes] = await Promise.all([
-        fetch('/api/cron-jobs'),
-        fetch('/api/projects'),
-        fetch('/api/system-status'),
+        fetch(`${GATEWAY_URL}/api/cron-jobs`),
+        fetch(`${GATEWAY_URL}/api/projects`),
+        fetch(`${GATEWAY_URL}/api/system-status`),
       ]);
 
       if (cronRes.ok) {
