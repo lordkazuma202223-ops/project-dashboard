@@ -27,6 +27,39 @@
 
 ## Completed Tasks (2026-02-17)
 
+### Portfolio - Enhanced Card Animations ✅
+- **Task:** Make project cards as responsive/reactive as skill cards and fix cursor color
+- **Implementation:** Complete with enhanced hover effects
+- **Cursor Fix:**
+  - Changed cursor border-color to #9b59b6 (purple)
+  - Added purple box-shadow (rgba(155, 89, 182, 0.5))
+  - Enhanced cursor.active state with stronger glow
+  - Added border-color transition for smooth effect
+- **Project Cards Enhanced:**
+  - Perspective transform on hover
+  - Stronger shadow: rgba(155, 89, 182, 0.4)
+  - Image scale effect (1.1x) on hover
+  - Title color changes to purple on hover
+  - Text brightens on hover
+  - Tech tags elevate and brighten on hover
+  - Purple gradient glow overlay (pseudo-element)
+  - Reduced transition to 0.3s for more responsiveness
+- **Skill Cards Enhanced:**
+  - Added border-color transition
+  - Increased elevation to -15px
+  - Stronger hover shadow
+  - More responsive transitions
+- **Files:**
+  - `styles.css` - Enhanced hover effects
+  - `index.html` - Fixed cursor color
+- **Commits:** 5c26498 (feat: Enhance card hover effects and fix cursor color)
+- **Status:** ✅ Complete, pushed to GitHub
+- **GitHub:** https://github.com/lordkazuma202223-ops/portfolio
+
+---
+
+## Completed Tasks (2026-02-17)
+
 ### Portfolio - Professional Scroll Animations ✅
 - **Task:** Add impressive professional scroll animations
 - **Implementation:** Complete with new animation system
